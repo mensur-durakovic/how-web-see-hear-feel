@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+        }
+
+        #preview {
+            max-width: 100%;
+            margin-top: 1em;
+        }
+
+        #result {
+            margin-top: 1em;
+            background: #f0f0f0;
+            padding: 1em;
+            border-radius: 8px;
+        }
+
+        #error {
+            color: red;
+            margin-top: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Face Detection Demo (Chrome FaceDetector API)</h1>
+    <input type="file" accept="image/*" capture="environment" id="imageInput">
+    <br>
+    <img id="preview" style="display:none;" />
+    <div id="result"></div>
+    <div id="error"></div>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+
+        imageInput.addEventListener('change', async (event) => {
+            result.textContent = '';
+            error.textContent = '';
+            const file = event.target.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+            try {
+                await preview.decode();
+                if (!('FaceDetector' in window)) {
+                    error.textContent = 'FaceDetector API is not supported in this browser.';
+                    return;
+                }
+                const detector = new FaceDetector();
+                const objects = await detector.detect(preview);
+                if (objects.length === 0) {
+                    result.textContent = 'No faces detected.';
+                } else {
+                    result.innerHTML = `<b>Detected faces: ${objects.length}</b><br>` +
+                        objects.map((obj, i) => `Face ${i + 1}: <br>Bounding box: <b>left=${obj.boundingBox.x}, top=${obj.boundingBox.y}, width=${obj.boundingBox.width}, height=${obj.boundingBox.height}</b>`).join('<br><br>');
+                }
+                objects.forEach(object => console.log(object));
+            } catch (e) {
+                error.textContent = 'Error: ' + e.message;
+            }
+        });
+    </script>
+</body>
+
+</html>
