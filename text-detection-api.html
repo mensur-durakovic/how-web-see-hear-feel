@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Detection Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+        }
+
+        #preview {
+            max-width: 100%;
+            margin-top: 1em;
+        }
+
+        #result {
+            margin-top: 1em;
+            background: #f0f0f0;
+            padding: 1em;
+            border-radius: 8px;
+        }
+
+        #error {
+            color: red;
+            margin-top: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Text Detection Demo (Chrome TextDetector API)</h1>
+    <input type="file" accept="image/*" capture="environment" id="imageInput">
+    <br>
+    <img id="preview" style="display:none;" />
+    <div id="result"></div>
+    <div id="error"></div>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+
+        imageInput.addEventListener('change', async (event) => {
+            result.textContent = '';
+            error.textContent = '';
+            const file = event.target.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+            try {
+                await preview.decode();
+                if (!('TextDetector' in window)) {
+                    error.textContent = 'TextDetector API is not supported in this browser.';
+                    return;
+                }
+                const detector = new TextDetector();
+                const objects = await detector.detect(preview);
+                if (objects.length === 0) {
+                    result.textContent = 'No text detected.';
+                } else {
+                    result.innerHTML = '<b>Detected text:</b><br>' + objects.map(obj => obj.rawValue).join('<br>');
+                }
+            } catch (e) {
+                error.textContent = 'Error: ' + e.message;
+            }
+        });
+    </script>
+</body>
+
+</html>
