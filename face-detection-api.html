@@ -63,7 +63,27 @@
                     result.textContent = 'No faces detected.';
                 } else {
                     result.innerHTML = `<b>Detected faces: ${objects.length}</b><br>` +
-                        objects.map((obj, i) => `Face ${i + 1}: <br>Bounding box: <b>left=${obj.boundingBox.x}, top=${obj.boundingBox.y}, width=${obj.boundingBox.width}, height=${obj.boundingBox.height}</b>`).join('<br><br>');
+                        objects.map((obj, i) => {
+                            let details = `Face ${i + 1}: <br>Bounding box: <b>left=${obj.boundingBox.x}, top=${obj.boundingBox.y}, width=${obj.boundingBox.width}, height=${obj.boundingBox.height}</b>`;
+                            if (obj.landmarks && obj.landmarks.length > 0) {
+                                const landmarkMap = { eye: [], nose: [], mouth: [] };
+                                obj.landmarks.forEach(lm => {
+                                    if (lm.type in landmarkMap) {
+                                        landmarkMap[lm.type].push(lm);
+                                    }
+                                });
+                                details += '<br>Landmarks:';
+                                ['eye', 'nose', 'mouth'].forEach(type => {
+                                    if (landmarkMap[type].length > 0) {
+                                        details += `<br><b>${type.charAt(0).toUpperCase() + type.slice(1)}${landmarkMap[type].length > 1 ? 's' : ''}:</b> ` +
+                                            landmarkMap[type].map((lm, idx) => `(${lm.location.x}, ${lm.location.y})`).join(', ');
+                                    }
+                                });
+                            } else {
+                                details += '<br><i>Landmarks (eyes, nose, mouth) not supported in this browser.</i>';
+                            }
+                            return details;
+                        }).join('<br><br>');
                 }
                 objects.forEach(object => console.log(object));
             } catch (e) {
